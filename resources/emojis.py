@@ -38,6 +38,7 @@ POTION_WOOD: Final[str] = '<:potion_wood:1080056193734692954>'
 # EPIC RPG artifacts
 ARTIFACT_BUNNY_MASK: Final[str] = '<:artifact_bunny_mask:1222138037157498930>'
 ARTIFACT_CHOCOLATE_BOX: Final[str] = '<:artifact_chocolate_box:1205499103350362153>'
+ARTIFACT_COWBOY_BOOTS: Final[str] = '<:horseshoe:1270110795044360254>'
 ARTIFACT_CLAUS_BELT: Final[str] = '<:artifact_claus_belt:1178995156125487104>'
 ARTIFACT_COIN_RING: Final[str] = '<:artifact_coin_ring:1146438214677188638>'
 ARTIFACT_GOLDEN_PAN: Final[str] = '<:artifact_golden_pan:1146438216887574582>'
