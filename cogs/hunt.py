@@ -22,6 +22,7 @@ class HuntCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
@@ -174,7 +175,7 @@ class HuntCog(commands.Cog):
                 )
             ):
                 user_name = partner_name = last_hunt_mode = user_command_message = partner = None
-                hardmode = together = alone = event_mob = found_together = partner_alerts_enabled = False
+                hardmode = together = alone = event_mob = partner_alerts_enabled = False
                 partner_christmas_area = False
                 user = await functions.get_interaction_user(message)
                 slash_command = False if user is None else True
@@ -361,7 +362,7 @@ class HuntCog(commands.Cog):
                     time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
                     
                 if together and partner_christmas_area:
-                    time_left_seconds_partner_hunt *= settings.CHRISTMAS_AREA_MULTIPLIER
+                    time_left_seconds_partner_hunt *= settings.CHRISTMAS_AREA_MULTIPLIERP
                 if together and partner is not None:
                     if partner.round_card_active:
                         time_left_seconds_partner_hunt *= settings.ROUND_CARD_MULTIPLIER                    
@@ -385,7 +386,7 @@ class HuntCog(commands.Cog):
                                                    * user_settings.alert_hunt_partner.multiplier
                                                    * pocket_watch_multiplier_partner * chocolate_box_multiplier_partner))
                 await user_settings.update(hunt_end_time=current_time + time_left)
-                if user_settings.hunt_reminders_combined:
+                if user_settings.hunt_reminders_combined and together:
                     time_left = max(time_left, time_left_partner_hunt)
                 reminder_created = False
                 if user_settings.alert_hunt.enabled and time_left >= timedelta(0):
