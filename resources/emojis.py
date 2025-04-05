@@ -44,6 +44,7 @@ ARTIFACT_COIN_RING: Final[str] = '<:artifact_coin_ring:1146438214677188638>'
 ARTIFACT_GOLDEN_PAN: Final[str] = '<:artifact_golden_pan:1146438216887574582>'
 ARTIFACT_MASTER_KEY: Final[str] = '<:artifact_master_key:1146438221924941905>'
 ARTIFACT_POCKET_WATCH: Final[str] = '<:artifact_pocket_watch:1146438229017493624>'
+ARTIFACT_SHINY_PICKAXE: Final[str] = '<:shiny_pickaxe:1358084515184250900>'
 ARTIFACT_TOP_HAT: Final[str] = '<:artifact_top_hat:1146438233492828391>'
 ARTIFACT_VAMPIRE_TEETH: Final[str] = '<:artifact_vampire_teeth:1164184967899787354>'
 
@@ -129,10 +130,11 @@ TIME_TRAVEL: Final[str] = '<:timetravel:1080056107726286878>'
 
 # EPIC RPG pets
 PET_CAT: Final[str] = '<:cat:1080065347757031454>'
+PET_CATERNAL: Final[str] = '<:caternal:1358084518032183422>'
 PET_DOG: Final[str] = '<:dog:1080065355004780595>'
 PET_DRAGON: Final[str] = '<:dragon:1080065280794968084>'
 PET_GOLDEN_BUNNY: Final[str] = '<:goldenbunny:1080065283059875850>'
-PET_HAMSTER: Final[str] = '<:hammy:1080065288357285978>' # /dev emoji-update: Emoji not found # /dev emoji-update: Emoji not found
+PET_HAMSTER: Final[str] = '<:hammy:1080065288357285978>'
 PET_HAPPINESS: Final[str] = '❤️'
 PET_HUNGER: Final[str] = '🌮'
 PET_HUNGER_EASTER: Final[str] = '🥕'
