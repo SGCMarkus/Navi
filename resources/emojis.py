@@ -60,7 +60,10 @@ CARD_UNCOMMON: Final[str] = '<:card_uncommon:1178995237482397756>'
 CARD_VOID: Final[str] = '<:card_void:1178995240120635462>'
 
 # EPIC RPG event items
+BUNNY_GOD: Final[str] = '<:bunny_god:1362405403857653810>'
 COIN_CELEBRATION: Final[str] = '<:coin_celebration:1155178894098432020>'
+EGG_EASTER: Final[str] = '<:egg_easter:1362405405954805920>'
+EGG_SQUARE: Final[str] = '<:egg_square:1362405409096204630>'
 HORSE_ARMOR: Final[str] = '<:horsearmor:1155178903124582522>'
 LB_EASTER: Final[str] = '<:lb_easter:1155178909843861645>'
 PARTY_POPPER: Final[str] = '<:party_popper:1155178914600206406>'
@@ -230,6 +233,11 @@ BOOSTS_EMOJIS: dict[str, str] = {
     'dev-boost': DEV_BUFF,
     'dev-buff': DEV_BUFF,
     'dragon-breath-potion': POTION_DRAGON_BREATH,
+    'easter-boost': EGG_EASTER,
+    'easterng-boost-i': EGG_SQUARE,
+    'easterng-boost-ii': EGG_SQUARE,
+    'easterng-boost-iii': EGG_SQUARE,
+    'egg-blessing': BUNNY_GOD,
     'electronical-potion': POTION_ELECTRONICAL,
     'fish-potion': POTION_FISH,
     'flask-potion': POTION_FLASK,
