@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from math import ceil
 import sqlite3
-from typing import Any, NamedTuple, Tuple
+from typing import Any, NamedTuple
 
 from discord import utils
 
@@ -75,7 +75,7 @@ class User():
     alert_vote: UserAlert
     alert_weekly: UserAlert
     alert_work: UserAlert
-    alts: Tuple[int]
+    alts: tuple[int, ...]
     ascended: bool
     area_20_cooldowns_enabled: bool
     auto_flex_enabled: bool
@@ -325,13 +325,13 @@ class User():
         await alts_db.delete_alt(self.user_id, alt_id)
         await self.refresh()
         
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the user record in the database. Also calls refresh().
         If user_donor_tier is updated and a partner is set, the partner's partner_donor_tier is updated as well.
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             alert_advent_enabled: bool
             alert_advent_message: str
             alert_advent_visible: bool
@@ -556,7 +556,7 @@ class User():
             user_donor_tier: int
             user_pocket_watch_multiplier: float
         """
-        await _update_user(self, **kwargs)
+        await _update_user(self, **updated_settings)
         await self.refresh()
 
     async def update_multiplier(self, activity: str, time_left: timedelta) -> None:
@@ -614,9 +614,9 @@ class User():
 
         # Update multiplier
         if current_multiplier != new_multiplier:
-            kwargs: dict[str, float] = {} 
-            kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_multiplier'] = new_multiplier
-            await self.update(**kwargs)
+            updated_settings: dict[str, float] = {} 
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS[activity]}_multiplier'] = new_multiplier
+            await self.update(**updated_settings)
 
 
 # Miscellaneous functions
@@ -820,7 +820,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             halloween_helper_enabled = bool(record['halloween_helper_enabled']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
-            hunt_end_time = datetime.fromisoformat(record['hunt_end_time']).replace(tzinfo=timezone.utc),
+            hunt_end_time = record['hunt_end_time'].replace(tzinfo=timezone.utc),
             hunt_reminders_combined = bool(record['hunt_reminders_combined']),
             inventory = UserInventory(bread=(record['inventory_bread']), carrot=(record['inventory_carrot']),
                                       potato=(record['inventory_potato']),
@@ -834,7 +834,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             last_lootbox = '' if record['last_lootbox'] is None else record['last_lootbox'],
             last_quest_command = '' if record['last_quest_command'] is None else record['last_quest_command'],
             last_training_command = record['last_training_command'],
-            last_tt = datetime.fromisoformat(record['last_tt']).replace(tzinfo=timezone.utc) if record['last_tt'] is not None else none_date,
+            last_tt = record['last_tt'] if record['last_tt'] is not None else none_date,
             last_work_command = '' if record['last_work_command'] is None else record['last_work_command'],
             megarace_helper_enabled = bool(record['megarace_helper_enabled']),
             multiplier_management_enabled = bool(record['multiplier_management_enabled']),
@@ -842,7 +842,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             partner_channel_id = record['partner_channel_id'],
             partner_chocolate_box_unlocked = bool(record['partner_chocolate_box_unlocked']),
             partner_donor_tier = record['partner_donor_tier'],
-            partner_hunt_end_time = datetime.fromisoformat(record['partner_hunt_end_time']).replace(tzinfo=timezone.utc),
+            partner_hunt_end_time = record['partner_hunt_end_time'].replace(tzinfo=timezone.utc),
             partner_id = record['partner_id'],
             partner_name = record['partner_name'],
             partner_pocket_watch_multiplier = float(record['partner_pocket_watch_multiplier']),
@@ -1040,14 +1040,14 @@ async def get_user_count() -> int:
 
 
 # Write Data
-async def _update_user(user: User, **kwargs) -> None:
+async def _update_user(user: User, **updated_settings) -> None:
     """Updates user record. Use User.update() to trigger this function.
     If user_donor_tier is updated and a partner is set, the partner's partner_donor_tier is updated as well.
 
     Arguments
     ---------
     user_id: int
-    kwargs (column=value):
+    updated_settings (column=value):
         alert_advent_enabled: bool
         alert_advent_message: str
         alert_advent_visible: bool
@@ -1275,12 +1275,12 @@ async def _update_user(user: User, **kwargs) -> None:
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    NoArgumentsError if no updated_settings are passed (need to pass at least one)
     Also logs all errors to the database.
     """
     table: str = 'users'
     function_name: str = '_update_user'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
@@ -1288,15 +1288,15 @@ async def _update_user(user: User, **kwargs) -> None:
     try:
         cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
         sql: str = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        kwargs['user_id'] = user.user_id
+        updated_settings['user_id'] = user.user_id
         sql = f'{sql} WHERE user_id = :user_id'
-        cur.execute(sql, kwargs)
-        if 'user_donor_tier' in kwargs and user.partner_id is not None:
+        cur.execute(sql, updated_settings)
+        if 'user_donor_tier' in updated_settings and user.partner_id is not None:
             partner: User = await get_user(user.partner_id)
-            await partner.update(partner_donor_tier=kwargs['user_donor_tier'])
+            await partner.update(partner_donor_tier=updated_settings['user_donor_tier'])
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

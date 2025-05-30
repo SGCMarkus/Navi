@@ -3,7 +3,7 @@
 
 import asyncio
 import re
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 import discord
 from discord.ext import bridge, commands
@@ -142,7 +142,7 @@ if not settings.LITE_MODE: SETTINGS_USER_COLUMNS['reactions'] = 'reactions'
 
 # --- Commands ---
 async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                 action: str, settings: List[str]) -> None:
+                                 action: str, settings: list[str]) -> None:
     """Enables/disables specific settings"""
     user_settings: users.User = await users.get_user(ctx.author.id)
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
@@ -206,11 +206,11 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
         elif setting in SETTINGS_USER: updated_user.append(setting)
         else: ignored_settings.append(setting)
 
-    kwargs = {}
+    updated_settings = {}
     if updated_reminders:
         answer_reminders = f'{action.capitalize()}d reminders for the following activities:'
         for activity in updated_reminders:
-            kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_enabled'] = enabled
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS[activity]}_enabled'] = enabled
             answer_reminders = f'{answer_reminders}\n{emojis.BP}`{activity}`'
             if not enabled:
                 if activity == 'pets':
@@ -229,17 +229,17 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
     if updated_helpers:
         answer_helpers = f'{action.capitalize()}d the following helpers:'
         for helper in updated_helpers:
-            kwargs[f'{SETTINGS_HELPER_COLUMNS[helper]}_enabled'] = enabled
+            updated_settings[f'{SETTINGS_HELPER_COLUMNS[helper]}_enabled'] = enabled
             answer_helpers = f'{answer_helpers}\n{emojis.BP}`{helper}`'
 
     if updated_user:
         answer_user = f'{action.capitalize()}d the following user settings:'
         for setting in updated_user:
-            kwargs[f'{SETTINGS_USER_COLUMNS[setting]}_enabled'] = enabled
+            updated_settings[f'{SETTINGS_USER_COLUMNS[setting]}_enabled'] = enabled
             answer_user = f'{answer_user}\n{emojis.BP}`{setting}`'
 
     if updated_reminders or updated_helpers or updated_user:
-        await user_settings.update(**kwargs)
+        await user_settings.update(**updated_settings)
 
     if ignored_settings:
         answer_ignored = f'Couldn\'t find the following settings:'
@@ -259,7 +259,7 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
     await ctx.respond(answer.strip())
 
 
-async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context, args: List[str]) -> None:
+async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context, args: list[str]) -> None:
     user_settings: users.User = await users.get_user(ctx.author.id)
     async def get_current_multipliers() -> str:
         current_multipliers: str = '**Managed**'
@@ -295,12 +295,12 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
         multiplier_found: float | None = None
         activities_found: list[str] = []
         ignored_activities: list[str] = []
-        kwargs: dict[str, Any] = {}
+        updated_settings: dict[str, Any] = {}
         arg: str
         for arg in args:
             if arg == 'reset':
                 for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
-                     kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = 1
+                     updated_settings[f'alert_{activity.replace("-","_")}_multiplier'] = 1
                 break
             try:
                 multiplier_found = float(arg)
@@ -321,7 +321,7 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                             f'Changing managed multipliers with this command is not possible if automatic multiplier management is enabled.'
                         )
                         return
-                    kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = multiplier_found
+                    updated_settings[f'alert_{activity.replace("-","_")}_multiplier'] = multiplier_found
                 activities_found = []
             except ValueError:
                 if arg == 'all':
@@ -339,10 +339,10 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                 f'Invalid syntax.\n\n{syntax}'
             )
             return
-        if not kwargs:
+        if not updated_settings:
             answer: str = 'No valid multipliers found.'
         else:
-            await user_settings.update(**kwargs)
+            await user_settings.update(**updated_settings)
             answer: str = 'Multiplier(s) updated.'
         current_multipliers: str = await get_current_multipliers()
         answer = (
@@ -1034,7 +1034,7 @@ async def embed_settings_helpers(bot: bridge.AutoShardedBot, ctx: discord.Applic
 
 
 async def embed_settings_portals(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext, user_settings: users.User,
-                                 user_portals: List[portals.Portal]) -> discord.Embed:
+                                 user_portals: list[portals.Portal]) -> discord.Embed:
     """Portals settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     message_style = 'Embed' if user_settings.portals_as_embed else 'Normal message'
@@ -1057,7 +1057,7 @@ async def embed_settings_portals(bot: bridge.AutoShardedBot, ctx: discord.Applic
 
 
 async def embed_settings_messages(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
-                                  user_settings: users.User, activity: str) -> List[discord.Embed]:
+                                  user_settings: users.User, activity: str) -> list[discord.Embed]:
     """Reminder message specific activity embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     embed_no = 1
