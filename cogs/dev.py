@@ -144,7 +144,7 @@ class DevCog(commands.Cog):
             for attribute_name, emoji_string in missing_emojis.items():
                 description = f'{description}\n- {emoji_string} `{attribute_name}`'
         if len(description) >= 4096:
-            description = f'{description[:4050]}\n- ... too many errors, what are you even doing?'
+            description = f'{description[:4000]}\n- ... too many errors, what are you even doing?'
         embed = discord.Embed(
             title = 'Emoji check',
             description = description,
@@ -644,6 +644,7 @@ async def embed_dev_seasonal_event(bot: bridge.AutoShardedBot) -> discord.Embed:
         f'{emojis.BP} Christmas: `xmas advent-calendar`, `xmas chimney`, `open eternal present`\n'
         f'{emojis.BP} Halloween: `hal boo`\n'
         f'{emojis.BP} Horse Festival: `hf megarace`, `hf minirace`\n'
+        f'{emojis.BP} Summer: `color tournament`, `surf`\n'
         f'{emojis.BP} Valentine: `love share`'
     )
 

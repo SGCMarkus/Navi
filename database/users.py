@@ -47,6 +47,7 @@ class User():
     alert_cel_multiply: UserAlert
     alert_cel_sacrifice: UserAlert
     alert_chimney: UserAlert
+    alert_color_tournament: UserAlert
     alert_daily: UserAlert
     alert_duel: UserAlert
     alert_dungeon_miniboss: UserAlert
@@ -71,6 +72,7 @@ class User():
     alert_pet_tournament: UserAlert
     alert_pets: UserAlert
     alert_quest: UserAlert
+    alert_surf: UserAlert
     alert_training: UserAlert
     alert_vote: UserAlert
     alert_weekly: UserAlert
@@ -85,7 +87,6 @@ class User():
     auto_ready_enabled: bool
     bot_enabled: bool
     chocolate_box_unlocked: bool
-    clan_name: str
     christmas_area_enabled: bool
     cmd_cd_visible: bool
     cmd_inventory_visible: bool
@@ -189,6 +190,7 @@ class User():
         self.alert_cel_sacrifice = new_settings.alert_cel_sacrifice
         self.alert_chimney = new_settings.alert_chimney
         self.alert_big_arena = new_settings.alert_big_arena
+        self.alert_color_tournament = new_settings.alert_color_tournament
         self.alert_daily = new_settings.alert_daily
         self.alert_duel = new_settings.alert_duel
         self.alert_dungeon_miniboss = new_settings.alert_dungeon_miniboss
@@ -213,6 +215,7 @@ class User():
         self.alert_pet_tournament = new_settings.alert_pet_tournament
         self.alert_pets = new_settings.alert_pets
         self.alert_quest = new_settings.alert_quest
+        self.alert_surf = new_settings.alert_surf
         self.alert_training = new_settings.alert_training
         self.alert_vote = new_settings.alert_vote
         self.alert_weekly = new_settings.alert_weekly
@@ -227,7 +230,6 @@ class User():
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
         self.chocolate_box_unlocked = new_settings.chocolate_box_unlocked
-        self.clan_name = new_settings.clan_name
         self.christmas_area_enabled = new_settings.christmas_area_enabled
         self.cmd_cd_visible = new_settings.cmd_cd_visible
         self.cmd_inventory_visible = new_settings.cmd_inventory_visible
@@ -369,6 +371,10 @@ class User():
             alert_chimney_message: str
             alert_chimney_multiplier: float
             alert_chimney_visible: bool
+            alert_color_tournament_enabled: bool
+            alert_color_tournament_message: str
+            alert_color_tournament_multiplier: float
+            alert_color_tournament_visible: bool
             alert_daily_enabled: bool
             alert_daily_message: str
             alert_daily_multiplier: float
@@ -447,6 +453,10 @@ class User():
             alert_quest_message: str
             alert_quest_multiplier: float
             alert_quest_visible: bool
+            alert_surf_enabled: bool
+            alert_surf_message: str
+            alert_surf_multiplier: float
+            alert_surf_visible: bool
             alert_training_enabled: bool
             alert_training_message: str
             alert_training_multiplier: float
@@ -471,7 +481,6 @@ class User():
             auto_ready_enabled: bool
             bot_enabled: bool
             chocolate_box_unlocked: bool
-            clan_name: str
             cmd_cd_visible: bool
             cmd_inventory_visible: bool
             cmd_cmd_ready_visible: bool
@@ -667,6 +676,10 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
                                       message=record['alert_chimney_message'],
                                       multiplier=record['alert_chimney_multiplier'],
                                       visible=bool(record['alert_chimney_visible'])),
+            alert_color_tournament = UserAlert(enabled=bool(record['alert_color_tournament_enabled']),
+                                      message=record['alert_color_tournament_message'],
+                                      multiplier=record['alert_color_tournament_multiplier'],
+                                      visible=bool(record['alert_color_tournament_visible'])),
             alert_big_arena = UserAlert(enabled=bool(record['alert_big_arena_enabled']),
                                         message=record['alert_big_arena_message'],
                                         multiplier=1.0,
@@ -779,6 +792,10 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
                                     message=record['alert_quest_message'],
                                     multiplier=float(record['alert_quest_multiplier']),
                                     visible=bool(record['alert_quest_visible'])),
+            alert_surf = UserAlert(enabled=bool(record['alert_surf_enabled']),
+                                    message=record['alert_surf_message'],
+                                    multiplier=float(record['alert_surf_multiplier']),
+                                    visible=bool(record['alert_surf_visible'])),
             alert_training = UserAlert(enabled=bool(record['alert_training_enabled']),
                                        message=record['alert_training_message'],
                                        multiplier=float(record['alert_training_multiplier']),
@@ -805,7 +822,6 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             auto_flex_tip_read = bool(record['auto_flex_tip_read']),
             bot_enabled = bool(record['bot_enabled']),
             chocolate_box_unlocked = bool(record['chocolate_box_unlocked']),
-            clan_name = record['clan_name'],
             christmas_area_enabled = bool(record['christmas_area_enabled']),
             cmd_cd_visible = record['cmd_cd_visible'],
             cmd_inventory_visible = record['cmd_inventory_visible'],
@@ -972,44 +988,6 @@ async def get_all_users() -> tuple[User,...]:
     return tuple(users)
 
 
-async def get_users_by_clan_name(clan_name: str) -> tuple[User,...]:
-    """Gets all user settings of all users that have a certain clan_name set.
-
-    Returns
-    -------
-    Tuple with User objects
-
-    Raises
-    ------
-    sqlite3.Error if something happened within the database.
-    exceptions.NoDataFoundError if no guild was found.
-    LookupError if something goes wrong reading the dict.
-    Also logs all errors to the database.
-    """
-    table: str = 'users'
-    function_name: str = 'get_users_by_clan_name'
-    sql: str = f'SELECT * FROM {table} WHERE clan_name=?'
-    try:
-        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
-        cur.execute(sql, (clan_name,))
-        records: list[Any] = cur.fetchall()
-    except sqlite3.Error as error:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
-        )
-        raise
-    if not records:
-        raise exceptions.FirstTimeUserError(f'No users found for clan {clan_name} ')
-    users: list[User] = []
-    for record in records:
-        record: dict[str, Any] = dict(record)
-        record['alts'] = await alts_db.get_alts(record['user_id'])
-        user: User = await _dict_to_user(record)
-        users.append(user)
-
-    return tuple(users)
-
-
 async def get_user_count() -> int:
     """Gets the amount of users in the table "users".
 
@@ -1085,6 +1063,10 @@ async def _update_user(user: User, **updated_settings) -> None:
         alert_chimney_message: str
         alert_chimney_multiplier: float
         alert_chimney_visible: bool
+        alert_color_tournament_enabled: bool
+        alert_color_tournament_message: str
+        alert_color_tournament_multiplier: float
+        alert_color_tournament_visible: bool
         alert_daily_enabled: bool
         alert_daily_message: str
         alert_daily_multiplier: float
@@ -1163,6 +1145,10 @@ async def _update_user(user: User, **updated_settings) -> None:
         alert_quest_message: str
         alert_quest_multiplier: float
         alert_quest_visible: bool
+        alert_surf_enabled: bool
+        alert_surf_message: str
+        alert_surf_multiplier: float
+        alert_surf_visible: bool
         alert_training_enabled: bool
         alert_training_message: str
         alert_training_multiplier: float
@@ -1187,7 +1173,6 @@ async def _update_user(user: User, **updated_settings) -> None:
         auto_ready_enabled: bool
         bot_enabled: bool
         chocolate_box_unlocked: bool
-        clan_name: str
         cmd_cd_visible: bool
         cmd_inventory_visible: bool
         cmd_cmd_ready_visible: bool

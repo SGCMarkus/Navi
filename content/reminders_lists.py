@@ -1,7 +1,7 @@
 # reminders_lists.py
 """Contains reminder list commands"""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Optional, Union
 
 import discord
@@ -117,11 +117,11 @@ async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
     except:
         user_reminders = []
     clan_reminders = []
-    if user_settings.clan_name is not None:
-        try:
-            clan_reminders = list(await reminders.get_active_clan_reminders(user_settings.clan_name))
-        except:
-            pass
+    try:
+        clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
+        clan_reminders = list(await reminders.get_active_clan_reminders(clan.clan_name))
+    except exceptions.NoDataFoundError:
+        pass
 
     current_time = utils.utcnow()
     reminders_commands_list = []
@@ -306,12 +306,11 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
         user_reminders = []
     clan_reminders = []
     clan = None
-    if user_settings.clan_name is not None:
-        try:
-            clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
-            clan_reminders = await reminders.get_active_clan_reminders(user_settings.clan_name)
-        except exceptions.NoDataFoundError:
-            pass
+    try:
+        clan: clans.Clan = await clans.get_clan_by_user_id(user_settings.user_id)
+        clan_reminders = await reminders.get_active_clan_reminders(clan.clan_name)
+    except exceptions.NoDataFoundError:
+        pass
 
     async def get_command_from_activity(activity:str) -> str:
         if activity == 'dungeon-miniboss':
@@ -490,6 +489,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
             command = await get_command_from_activity(activity)
             ready_commands.append(command)
         for command in sorted(ready_commands):
+            if 'color tournament' in command and datetime.today().weekday() >= 5: continue
             field_ready_commands = (
                 f'{field_ready_commands}\n'
                 f'{emojis.BP} {command}'
@@ -499,6 +499,12 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                 field_ready_commands = (
                     f'{field_ready_commands}\n'
                     f'{emojis.DETAIL} _Use {command_pets_list} to update reminders._'
+                )
+            elif 'color tournament' in command:
+                command_use_drink = await functions.get_slash_command(user_settings, 'smr drink')
+                field_ready_commands = (
+                    f'{field_ready_commands}\n'
+                    f'{emojis.DETAIL} _Use {command_use_drink} <drink> to join._'
                 )
             elif 'arena' in command and user_settings.ready_channel_arena is not None:
                 field_ready_commands = (
